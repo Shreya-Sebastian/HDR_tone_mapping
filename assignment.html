@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>HDR Tone Mapping</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <style>
+/*
+ * Slightly modified version of the following theme:;
+ * https://github.com/markdowncss/air
+ */
+html {
+  font-size: 12px;
+}
+
+@media print {
+  *:before,
+  *:after {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  html {
+    font-size: 14px;
+  }
+  body {
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+
+  a,
+  a:visited {
+    text-decoration: underline;
+  }
+
+  a[href]:after {
+    content: " (" attr(href) ")";
+  }
+
+  abbr[title]:after {
+    content: " (" attr(title) ")";
+  }
+
+  a[href^="#"]:after,
+  a[href^="javascript:"]:after {
+    content: "";
+  }
+
+  pre,
+  blockquote {
+    border: 1px solid #999;
+    page-break-inside: avoid;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tr,
+  img {
+    page-break-inside: avoid;
+  }
+
+  img {
+    max-width: 100% !important;
+  }
+
+  p,
+  h2,
+  h3 {
+    orphans: 3;
+    widows: 3;
+  }
+
+  h2,
+  h3 {
+    page-break-after: avoid;
+  }
+}
+
+@media screen and (min-width: 32rem) and (max-width: 48rem) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media screen and (min-width: 48rem) {
+  html {
+    font-size: 16px;
+  }
+}
+
+body {
+  line-height: 1.85;
+  padding-bottom: 2rem;
+}
+
+p,
+.air-p {
+  font-size: 1rem;
+  margin-bottom: 1.3rem;
+}
+
+h1,
+.air-h1,
+h2,
+.air-h2,
+h3,
+.air-h3,
+h4,
+.air-h4 {
+  margin: 1.414rem 0 .5rem;
+  font-weight: inherit;
+  line-height: 1.42;
+}
+
+h1,
+.air-h1 {
+  margin-top: 0;
+  font-size: 3.998rem;
+}
+
+h2,
+.air-h2 {
+  font-size: 2.827rem;
+}
+
+h3,
+.air-h3 {
+  font-size: 1.999rem;
+}
+
+h4,
+.air-h4 {
+  font-size: 1.414rem;
+}
+
+h5,
+.air-h5 {
+  font-size: 1.121rem;
+}
+
+h6,
+.air-h6 {
+  font-size: .88rem;
+}
+
+small,
+.air-small {
+  font-size: .707em;
+}
+
+/* https://github.com/mrmrs/fluidity */
+
+img,
+canvas,
+iframe,
+video,
+svg,
+select,
+textarea {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+
+  max-width: 100%;
+}
+
+figcaption {
+  text-align: center;
+}
+.subfigures {
+  text-align: center;
+}
+.subfigures figure {
+  float: left;
+  width: 50%;
+  margin:0;
+  display: inline-block;
+}
+.subfigures img {
+  display: inline-block;
+  width: 90%;
+}
+.subfigures figure figcaption {
+  display: inline-block;
+}
+
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:300italic,300);
+
+body {
+  color: #444;
+  font-family: 'Open Sans', Helvetica, sans-serif;
+  font-weight: 300;
+  margin: 6rem auto 1rem;
+  max-width: 48rem;
+  text-align: justify;
+}
+
+/*img {
+  border-radius: 50%;
+  height: 200px;
+  margin: 0 auto;
+  width: 200px;
+}*/
+
+a,
+a:visited {
+  color: #3498db;
+}
+
+a:hover,
+a:focus,
+a:active {
+  color: #2980b9;
+}
+
+pre:not(.sourceCode) {
+  background-color: #fafafa;
+}
+pre {
+  padding: 1rem;
+  text-align: left;
+}
+
+blockquote {
+  margin: 0;
+  border-left: 5px solid #7a7a7a;
+  font-style: italic;
+  padding: 1.33em;
+  text-align: left;
+}
+
+ul,
+ol,
+li {
+  text-align: left;
+}
+
+p {
+  color: #777;
+}
+</style>
+  <div style="overflow:auto;">
+  	<p style="float:left;margin:0;"><b>CS4365</b> - Applied Image Processing</p><p style="float:right;margin:0;">Elmar Eisemann, Petr Kellnhofer, Michael Weinmann</p>
+  </div>
+
+  <hr>
+  <br/>
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+  type="text/javascript"></script>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">HDR Tone Mapping</h1>
+</header>
+<h3 id="rules">Rules</h3>
+<p>For this assignment the following rules apply:</p>
+<p><strong>General</strong></p>
+<ul>
+<li>The assignment must be done <strong>individually</strong></li>
+<li>All code must be written by you. Any external help (e.g. working
+together, copying code) is considered fraud. Code that was made in a
+group work may not be reused.</li>
+<li>Sharing any code is not permitted and considered fraud.</li>
+<li>Your code <strong>must compile on Windows with Visual Studio
+2022</strong>. We will not grade your code otherwise!</li>
+</ul>
+<p><strong>Grading</strong></p>
+<ul>
+<li>Your code is graded by testing the functions you implement for
+various inputs. The number of points you receive is based on the
+percentage of correct cases.</li>
+<li>The grade is computed as <span class="math inline">\(\text{grade} =
+1 + \frac{\text{points}}{\text{max points}} * 9\)</span></li>
+<li>You will receive a breakdown of your grade in the feedback section
+on Brightspace.</li>
+</ul>
+<p><strong>Submission</strong></p>
+<ul>
+<li>You should submit your code on Brightspace,</li>
+<li>Hand in <strong>only</strong> <code>your_code_here.h</code> and do
+not change the name of this file.</li>
+<li>Any modifications made to files outside of
+<code>your_code_here.h</code> will not be considered. If modifications
+to other files are required for <code>your_code_here.h</code> to compile
+then your submission will not be graded.</li>
+<li>Do not modify the function signatures of any of the functions in
+<code>your_code_here.h</code>. This may break the testing script which
+means your code will not be graded.</li>
+<li>Late submissions must be submitted <em>as soon as possible</em> to
+the “Assignment ### - Late Submissions” assignment on Brightspace.
+<ul>
+<li>The following penalty will be applied: <span
+class="math inline">\(\text{adjusted grade} = \text{grade} - 1 -
+\lceil\frac{\text{minutes late}}{10}\rceil\)</span></li>
+</ul></li>
+</ul>
+<h3 id="code-organization">Code Organization</h3>
+<p>The project that you received consists of several files and
+folders:</p>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 84%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>src</code></td>
+<td>Directory contains all the <code>c++</code> source files (both
+<code>.cpp</code> implementation and <code>.h</code> header files)</td>
+</tr>
+<tr class="even">
+<td><code>framework</code></td>
+<td>Contains the framework code (code that is shared between the
+different assignments)</td>
+</tr>
+<tr class="odd">
+<td><code>CMakeLists.txt</code></td>
+<td>Tells the <code>CMake</code> build system how to compile/link the
+program</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>src</code> directory contains the only files that you have
+to interact with. The assignments are set up in such a way that you only
+have to modify one or two files each time. None of the assignments
+should require you to change the <code>framework</code> or
+<code>CMakeLists.txt</code>.</p>
+<h3 id="before-you-start">Before You Start</h3>
+<p><strong>Follow the steps in setup guide
+(<code>setup_guide_vs2022.pdf</code>) before continuing.</strong> After
+installation you can open the project with Visual Studio and start with
+the exercises.</p>
+<h4 id="acknowledgments">Acknowledgments</h4>
+<p>These instructions have been developed based on a template by Mathijs
+Molenaar.</p>
+</body>
+</html>

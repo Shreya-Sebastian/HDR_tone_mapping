@@ -1,0 +1,6 @@
+memorial2_half.hdr: Paul Debevec, Memorial Church, https://www.pauldebevec.com/Research/HDR/, edited for reduced resolution
+cat.png: edited from "Shallow Focus of Cat Face", Pixabay, CC0 @ Pexels.com, https://www.pexels.com/photo/shallow-focus-of-cat-face-54632/
+plane_src.jpg: edited from "White United Airlines Plane", Pascal Borener, CC @ Pexels.com, https://www.pexels.com/photo/white-united-airlines-plane-1089306/
+plane_target.jpg: edited from "Sunflower Garden Under Blue Sky", K Zoltan, CC @ Pexels.com, https://www.pexels.com/photo/sunflower-garden-under-blue-sky-544554/
+
+Other images are custom.
