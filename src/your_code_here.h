@@ -36,21 +36,34 @@ int getImageOffset(const Image<T>& image, int x, int y)
 
 glm::vec2 getRGBImageMinMax(const ImageRGB& image) {
 
-    auto min_val = 0.0f;
-    auto max_val = 0.0f;
+    auto min_val = 100.0f;
+    auto max_val = -1.0f;
 
     // Write a code that will return minimum value (min of all color channels and pixels) and maximum value as a glm::vec2(min,max).
     
     // Note: Parallelize the code using OpenMP directives for full points.
     
-    /*******
-     * TODO: YOUR CODE GOES HERE!!!
-     ******/
+
+    for (int y = 0; y < image.height; y++) {
+        for (int x = 0; x < image.width; x++) {
+            glm::vec3 val = image.data[y * image.width + x];
+
+            float max_rgb = std::max(std::max(val.r, val.g), val.b);
+            float min_rgb = std::min(std::min(val.r, val.g), val.b);
+
+            if (min_val > min_rgb) {
+                min_val = min_rgb;
+            }
+            if (max_val < max_rgb) {
+                max_val = max_rgb;
+            }
+        }
+
+    }
 
     // Return min and max value as x and y components of a vector.
     return glm::vec2(min_val, max_val);
 }
-
 
 ImageRGB normalizeRGBImage(const ImageRGB& image)
 {
@@ -62,9 +75,16 @@ ImageRGB normalizeRGBImage(const ImageRGB& image)
 
     // Fill the result with normalized image values (ie, fit the image to [0,1] range).    
     
-    /*******
-     * TODO: YOUR CODE GOES HERE!!!
-     ******/
+
+    for (int y = 0; y < image.height; y++) {
+        for (int x = 0; x < image.width; x++) {
+            glm::vec3 val = image.data[y * image.width + x];
+
+            glm::vec3 I_norm = (val - min_max.x) / (min_max.y - min_max.x);
+
+            result.data[y * image.width + x] = I_norm;
+        }
+    }
 
     return result;
 }
