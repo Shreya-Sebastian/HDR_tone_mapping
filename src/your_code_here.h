@@ -133,12 +133,13 @@ ImageFloat rgbToLuminance(const ImageRGB& rgb)
     // Fill the image by logarithmic luminace.
     // Luminance is a linear combination of the red, green and blue channels using the weights above.
 
-    /*******
-     * TODO: YOUR CODE GOES HERE!!!
-     ******/
+    for (int y = 0; y < rgb.height; y++) {
+        for (int x = 0; x < rgb.width; x++) {
+            glm::vec3 val = rgb.data[y * rgb.width + x];
 
-
-
+            luminance.data[y * rgb.width + x] = WEIGHTS_RGB_TO_LUM[0] * val.r + WEIGHTS_RGB_TO_LUM[1] * val.g + WEIGHTS_RGB_TO_LUM[2] * val.b;
+        }
+    }
     return luminance;
 }
 
