@@ -264,9 +264,32 @@ ImageRGB rescaleRgbByLuminance(const ImageRGB& original_rgb, const ImageFloat& o
     // An empty RGB image for the result.
     auto result = ImageRGB(original_rgb.width, original_rgb.height);
 
-    /*******
-     * TODO: YOUR CODE GOES HERE!!!
-     ******/
+    for (int y = 0; y < original_rgb.height; y++) {
+        for (int x = 0; x < original_rgb.width; x++) {
+            auto val = original_rgb.data[y * original_rgb.width + x];
+
+
+            float original_luminance_val = original_luminance.data[y * original_luminance.width + x];
+            float new_luminance_val = new_luminance.data[y * new_luminance.width + x];
+
+
+            float normalized_r = val.r / std::max(original_luminance_val, EPSILON);
+            float normalized_g = val.g / std::max(original_luminance_val, EPSILON);
+            float normalized_b = val.b / std::max(original_luminance_val, EPSILON);
+
+            float adjusted_r = std::pow(normalized_r, saturation) * new_luminance_val;
+            float adjusted_g = std::pow(normalized_g, saturation) * new_luminance_val;
+            float adjusted_b = std::pow(normalized_b, saturation) * new_luminance_val;
+
+
+            adjusted_r = std::clamp(adjusted_r, 0.0f, 1.0f);
+            adjusted_g = std::clamp(adjusted_g, 0.0f, 1.0f);
+            adjusted_b = std::clamp(adjusted_b, 0.0f, 1.0f);
+
+            result.data[y * result.width + x] = { adjusted_r, adjusted_g, adjusted_b }; 
+
+        }
+    }
 
     return result;
 }
