@@ -159,12 +159,57 @@ ImageFloat bilateralFilter(const ImageFloat& H, const int size, const float spac
     // The filter size is always odd.
     assert(size % 2 == 1);
 
+    // Kernel radius.
+    int radius = size / 2;
+
+    // Precompute spatial Gaussian weights.
+    std::vector<std::vector<float>> spatialWeights(size, std::vector<float>(size));
+    for (int i = -radius; i <= radius; i++) {
+        for (int j = -radius; j <= radius; j++) {
+            spatialWeights[i + radius][j + radius] = exp(-(i * i + j * j) / (2.0f * space_sigma * space_sigma));
+        }
+    }
+
     // Empty output image.
     auto result = ImageFloat(H.width, H.height);
 
-    /*******
-     * TODO: YOUR CODE GOES HERE!!!
-     ******/
+    for (int y = 0; y < H.height; y++) {
+        for (int x = 0; x < H.width; x++) {
+            float totalWeight = 0.0f;
+            float filteredValue = 0.0f;
+
+            float val = H.data[y * H.width + x];
+
+            // Iterate through the kernel.
+            for (int dy = -radius; dy <= radius; dy++) {
+                for (int dx = -radius; dx <= radius; dx++) {
+                    int nx = x + dx;
+                    int ny = y + dy;
+
+                    // Skip out-of-bounds pixels.
+                    if (nx < 0 || ny < 0 || nx >= H.width || ny >= H.height) {
+                        continue;
+                    }
+
+                    float n_val = H.data[ny * H.width + nx];
+
+                    // Compute range weight (intensity difference).
+                    float rangeWeight = exp(-(val - n_val) * (val - n_val) / (2.0f * range_sigma * range_sigma));
+
+                    // Compute combined weight --> f(x-y)g(I(x)-I(y))
+                    float weight = spatialWeights[dy + radius][dx + radius] * rangeWeight;
+
+                    // Accumulate the weighted value and total weight --> *I(y)
+                    filteredValue += n_val * weight;
+                    // Normalization factor
+                    totalWeight += weight;
+                }
+            }
+
+            // Normalize the result.
+            result.data[y * H.width + x] = filteredValue / totalWeight;
+        }
+    }
 
     // Return filtered intensity.
     return result;
