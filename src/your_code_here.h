@@ -51,10 +51,10 @@ glm::vec2 getRGBImageMinMax(const ImageRGB& image) {
             float max_rgb = std::max(std::max(val.r, val.g), val.b);
             float min_rgb = std::min(std::min(val.r, val.g), val.b);
 
-            if (min_val > min_rgb) {
+            if (min_rgb < min_val) {
                 min_val = min_rgb;
             }
-            if (max_val < max_rgb) {
+            if (max_rgb > max_val) {
                 max_val = max_rgb;
             }
         }
@@ -93,12 +93,29 @@ ImageRGB applyGamma(const ImageRGB& image, const float gamma)
 {
     // Create an empty image of the same size as input.
     auto result = ImageRGB(image.width, image.height);
-
+    auto Inorm = normalizeRGBImage(image);
     // Fill the result with gamma mapped pixel values (result = image^gamma).    
     
     /*******
      * TODO: YOUR CODE GOES HERE!!!
      ******/
+    for (int y = 0; y < image.height; y++) {
+        for (int x = 0; x < image.width; x++) {
+            glm::vec3 val = image.data[y * image.width + x];
+            //glm::vec3 val = Inorm.data[y * image.width + x];
+
+
+
+            float R = pow(val.r, gamma);
+            float G = pow(val.g, gamma);
+            float B = pow(val.b, gamma);
+
+            glm::vec3 rgb(R, G, B);
+
+            result.data[y * image.width + x] = rgb;
+        }
+    }
+    
 
     return result;
 }
