@@ -43,7 +43,7 @@ glm::vec2 getRGBImageMinMax(const ImageRGB& image) {
     
     // Note: Parallelize the code using OpenMP directives for full points.
     
-
+   #pragma omp parallel for
     for (int y = 0; y < image.height; y++) {
         for (int x = 0; x < image.width; x++) {
             glm::vec3 val = image.data[y * image.width + x];
@@ -95,16 +95,11 @@ ImageRGB applyGamma(const ImageRGB& image, const float gamma)
     auto result = ImageRGB(image.width, image.height);
     auto Inorm = normalizeRGBImage(image);
     // Fill the result with gamma mapped pixel values (result = image^gamma).    
-    
-    /*******
-     * TODO: YOUR CODE GOES HERE!!!
-     ******/
+
     for (int y = 0; y < image.height; y++) {
         for (int x = 0; x < image.width; x++) {
             glm::vec3 val = image.data[y * image.width + x];
             //glm::vec3 val = Inorm.data[y * image.width + x];
-
-
 
             float R = pow(val.r, gamma);
             float G = pow(val.g, gamma);
@@ -141,6 +136,8 @@ ImageFloat rgbToLuminance(const ImageRGB& rgb)
     /*******
      * TODO: YOUR CODE GOES HERE!!!
      ******/
+
+
 
     return luminance;
 }
