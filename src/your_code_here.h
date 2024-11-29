@@ -230,10 +230,20 @@ ImageFloat applyDurandToneMappingOperator(const ImageFloat& base_layer, const Im
     // Empty output image.
     auto result = ImageFloat(base_layer.width, base_layer.height);
 
-    /*******
-     * TODO: YOUR CODE GOES HERE!!!
-     ******/
+    for (int y = 0; y < base_layer.height; y++) {
+        for (int x = 0; x < base_layer.width; x++) {
+            auto b_val = base_layer.data[y * base_layer.width + x];
+            auto d_val = detail_layer.data[y * detail_layer.width + x];
 
+
+            float f_val = b_val * base_scale;
+            f_val += d_val;
+            f_val = exp(f_val);
+            f_val *= output_gain;
+
+            result.data[y * base_layer.width + x] = f_val;
+        }
+    }
     // Return final result as SDR.
     return result;
 }
