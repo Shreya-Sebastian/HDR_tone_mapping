@@ -42,7 +42,9 @@ glm::vec2 getRGBImageMinMax(const ImageRGB& image) {
    #pragma omp parallel for
     for (int y = 0; y < image.height; y++) {
         for (int x = 0; x < image.width; x++) {
-            glm::vec3 val = image.data[y * image.width + x];
+            int pos = getImageOffset(image, x, y);  
+            auto val = image.data[pos];
+
 
             float max_rgb = std::max(std::max(val.r, val.g), val.b);
             float min_rgb = std::min(std::min(val.r, val.g), val.b);
@@ -74,7 +76,8 @@ ImageRGB normalizeRGBImage(const ImageRGB& image)
 
     for (int y = 0; y < image.height; y++) {
         for (int x = 0; x < image.width; x++) {
-            glm::vec3 val = image.data[y * image.width + x];
+            int pos = getImageOffset(image, x, y);
+            auto val = image.data[pos];
 
             glm::vec3 I_norm = (val - min_max.x) / (min_max.y - min_max.x);
 
@@ -94,8 +97,9 @@ ImageRGB applyGamma(const ImageRGB& image, const float gamma)
 
     for (int y = 0; y < image.height; y++) {
         for (int x = 0; x < image.width; x++) {
-            glm::vec3 val = image.data[y * image.width + x];
-            //glm::vec3 val = Inorm.data[y * image.width + x];
+            int pos = getImageOffset(image, x, y);
+            auto val = image.data[pos];
+            //auto val = Inorm.data[pos];
 
             float R = pow(val.r, gamma);
             float G = pow(val.g, gamma);
@@ -131,7 +135,8 @@ ImageFloat rgbToLuminance(const ImageRGB& rgb)
 
     for (int y = 0; y < rgb.height; y++) {
         for (int x = 0; x < rgb.width; x++) {
-            glm::vec3 val = rgb.data[y * rgb.width + x];
+            int pos = getImageOffset(rgb, x, y);
+            auto val = rgb.data[pos];
 
             luminance.data[y * rgb.width + x] = WEIGHTS_RGB_TO_LUM[0] * val.r + WEIGHTS_RGB_TO_LUM[1] * val.g + WEIGHTS_RGB_TO_LUM[2] * val.b;
         }
@@ -187,7 +192,9 @@ ImageFloat bilateralFilter(const ImageFloat& H, const int size, const float spac
                         continue;
                     }
 
-                    float n_val = H.data[ny * H.width + nx];
+                    //float n_val = H.data[ny * H.width + nx];
+                    int pos = getImageOffset(H, nx, ny);
+                    auto n_val = H.data[pos];
 
                     // Compute range weight (intensity difference).
                     float rangeWeight = exp(-(val - n_val) * (val - n_val) / (2.0f * range_sigma * range_sigma));
@@ -228,8 +235,9 @@ ImageFloat applyDurandToneMappingOperator(const ImageFloat& base_layer, const Im
 
     for (int y = 0; y < base_layer.height; y++) {
         for (int x = 0; x < base_layer.width; x++) {
-            auto b_val = base_layer.data[y * base_layer.width + x];
-            auto d_val = detail_layer.data[y * detail_layer.width + x];
+            int pos = getImageOffset(base_layer, x, y);
+            auto b_val = base_layer.data[pos];
+            auto d_val = detail_layer.data[pos];
 
 
             float f_val = b_val * base_scale;
@@ -262,7 +270,9 @@ ImageRGB rescaleRgbByLuminance(const ImageRGB& original_rgb, const ImageFloat& o
 
     for (int y = 0; y < original_rgb.height; y++) {
         for (int x = 0; x < original_rgb.width; x++) {
-            auto val = original_rgb.data[y * original_rgb.width + x];
+            
+            int pos = getImageOffset(original_rgb, x, y);
+            auto val = original_rgb.data[pos];
 
 
             float original_luminance_val = original_luminance.data[y * original_luminance.width + x];
