@@ -23,12 +23,8 @@ int getImageOffset(const Image<T>& image, int x, int y)
     // ie. is the order of [x,y] pixels is [0,0],[1,0],[2,0]...[0,1],[1,1][2,1],...
     //
     // Image size can be accessed using image.width and image.height.
-    
-    /*******
-     * TODO: YOUR CODE GOES HERE!!!
-     ******/
 
-    return 0;
+    return y * image.width + x;
 }
 
 
@@ -314,15 +310,33 @@ ImageGradient getGradients(const ImageFloat& image)
     // An empty gradient pair (dx, dy).
     auto grad = ImageGradient({ image.width + 1, image.height + 1 }, { image.width + 1, image.height + 1 });
 
-    /*******
-     * TODO: YOUR CODE GOES HERE!!!
-     ******/
+    for (int y = 0; y < image.height; ++y) {
+        for (int x = 0; x < image.width; ++x) {
+            // Get the offset 
+            int currentxy = getImageOffset(image, x, y);
 
-    // Example:
-    // grad.dx.data[getImageOffset(grad.dx, 0, 0)] = 0.0f; // TODO: Change this!
-    // grad.dy.data[getImageOffset(grad.dy, 0, 0)] = 0.0f; // TODO: Change this!
+            // Compute dx
+            float dx = 0.0f; // Initialize
+            if (x + 1 < image.width) { // Boundary handling
+                int nextx = getImageOffset(image, x + 1, y);
+                dx = image.data[nextx] - image.data[currentxy];
+            }
 
-    // Return both gradients in an ImageGradient struct.
+            // Compute dy 
+            float dy = 0.0f; // Initialize
+            if (y + 1 < image.height) { // Boundary handling
+                int nexty = getImageOffset(image, x, y + 1);
+                dy = image.data[nexty] - image.data[currentxy];
+            }
+
+            // Store the gradients in the respective gradient images
+            int gradOffset = getImageOffset(grad.dx, x, y);
+            grad.dx.data[gradOffset] = dx;
+            grad.dy.data[gradOffset] = dy;
+        }
+    }
+
+    // Step 7: Return the gradient structure
     return grad;
 }
 
