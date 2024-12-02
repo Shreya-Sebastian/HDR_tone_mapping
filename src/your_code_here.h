@@ -367,9 +367,62 @@ ImageGradient copySourceGradientsToTarget(const ImageGradient& source, const Ima
     // An empty gradient pair (dx, dy).
     ImageGradient result = ImageGradient({ target.dx.width, target.dx.height }, { target.dx.width, target.dx.height });
 
-    /*******
-     * TODO: YOUR CODE GOES HERE!!!
-     ******/
+    for (int y = 0; y < source_mask.height; ++y) {
+        for (int x = 0; x < source_mask.width; ++x) {
+
+            int pos = getImageOffset(source_mask, x, y);
+            auto mask_val = source_mask.data[pos];
+
+            int gradOffset = getImageOffset(result.dx, x, y);
+            
+            if (mask_val > 0.5) {
+
+                result.dx.data[gradOffset] = source.dx.data[gradOffset];
+                result.dy.data[gradOffset] = source.dy.data[gradOffset];
+
+            } else {
+                result.dx.data[gradOffset] = target.dx.data[gradOffset];
+                result.dy.data[gradOffset] = target.dy.data[gradOffset];
+            }
+
+
+            if (x > 0) {
+                int left_pos = getImageOffset(source_mask, x-1, y);
+                float left_mask = source_mask.data[left_pos];
+                // Check if only one of the pixels belong to the source area - boundary handling
+                if ((mask_val > 0.5) != (left_mask > 0.5)) {
+                    result.dx.data[gradOffset] = 0;                 
+                }
+            }
+
+            if (x < source_mask.width-1) {
+                int right_pos = getImageOffset(source_mask, x + 1, y);
+                float right_mask = source_mask.data[right_pos];
+                // Boundary handling
+                if ((mask_val > 0.5) != (right_mask > 0.5)) {
+                    result.dx.data[gradOffset] = 0;
+                }
+            }
+
+            if (y > 0) {
+                int down_pos = getImageOffset(source_mask, x, y-1);
+                float down_mask = source_mask.data[down_pos];
+                // Boundary handling
+                if ((mask_val > 0.5) != (down_mask > 0.5)) {
+                    result.dy.data[gradOffset] = 0;
+                }
+            }
+
+            if (y < source_mask.height - 1) {
+                int up_pos = getImageOffset(source_mask, x, y+1);
+                float up_mask = source_mask.data[up_pos];
+                // Boundary handling
+                if ((mask_val > 0.5) != (up_mask > 0.5)) {
+                    result.dy.data[gradOffset] = 0;
+                }
+            }
+        }
+    }
 
     return result;
 }
