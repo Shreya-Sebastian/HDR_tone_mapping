@@ -375,6 +375,7 @@ ImageGradient copySourceGradientsToTarget(const ImageGradient& source, const Ima
 
             int gradOffset = getImageOffset(result.dx, x, y);
             
+            // Use either target or source gradients depending on mask value
             if (mask_val > 0.5) {
 
                 result.dx.data[gradOffset] = source.dx.data[gradOffset];
