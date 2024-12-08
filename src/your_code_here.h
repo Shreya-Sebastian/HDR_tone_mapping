@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -440,19 +440,30 @@ ImageGradient copySourceGradientsToTarget(const ImageGradient& source, const Ima
 /// <returns>div G</returns>
 ImageFloat getDivergence(ImageGradient& gradients)
 {
-
-    // An empty divergence field.
+    // An empty divergence field 
     auto div_G = ImageFloat(gradients.dx.width + 1, gradients.dx.height + 1);
 
-    /*******
-     * TODO: YOUR CODE GOES HERE!!!
-     ******/
+    for (int y = 0; y < gradients.dy.height; ++y) {
+        for (int x = 0; x < gradients.dx.width; ++x) {
+            // Calculate Gx/x
+            float div_x = gradients.dx.data[getImageOffset(gradients.dx, x, y)];
+            if (x > 0) {
+                div_x -= gradients.dx.data[getImageOffset(gradients.dx, x - 1, y)];
+            }
+
+            // Calculate Gy/y
+            float div_y = gradients.dy.data[getImageOffset(gradients.dy, x, y)];
+            if (y > 0) {
+                div_y -= gradients.dy.data[getImageOffset(gradients.dy, x, y - 1)];
+            }
+
+            // Sum partial derivatives for divergence.
+            div_G.data[getImageOffset(div_G, x, y)] = div_x + div_y;
+        }
+    }
 
     return div_G;
 }
-
-
-
 
 
 /// <summary>
