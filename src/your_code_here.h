@@ -167,6 +167,7 @@ ImageFloat bilateralFilter(const ImageFloat& H, const int size, const float spac
     std::vector<std::vector<float>> spatialWeights(size, std::vector<float>(size));
     for (int i = -radius; i <= radius; i++) {
         for (int j = -radius; j <= radius; j++) {
+            // Using squared Euclidean dist --> i * i + j * j
             spatialWeights[i + radius][j + radius] = exp(-(i * i + j * j) / (2.0f * space_sigma * space_sigma));
         }
     }
@@ -176,10 +177,11 @@ ImageFloat bilateralFilter(const ImageFloat& H, const int size, const float spac
 
     for (int y = 0; y < H.height; y++) {
         for (int x = 0; x < H.width; x++) {
-            float totalWeight = 0.0f;
+            float K = 0.0f;
             float filteredValue = 0.0f;
 
-            float val = H.data[y * H.width + x];
+            int pos = getImageOffset(H, x, y);
+            float val = H.data[pos];
 
             // Iterate through the kernel.
             for (int dy = -radius; dy <= radius; dy++) {
@@ -192,9 +194,8 @@ ImageFloat bilateralFilter(const ImageFloat& H, const int size, const float spac
                         continue;
                     }
 
-                    //float n_val = H.data[ny * H.width + nx];
-                    int pos = getImageOffset(H, nx, ny);
-                    auto n_val = H.data[pos];
+                    int n_pos = getImageOffset(H, nx, ny);
+                    auto n_val = H.data[n_pos];
 
                     // Compute range weight (intensity difference).
                     float rangeWeight = exp(-(val - n_val) * (val - n_val) / (2.0f * range_sigma * range_sigma));
@@ -203,14 +204,14 @@ ImageFloat bilateralFilter(const ImageFloat& H, const int size, const float spac
                     float weight = spatialWeights[dy + radius][dx + radius] * rangeWeight;
 
                     // Accumulate the weighted value and total weight --> *I(y)
-                    filteredValue += n_val * weight;
+                    filteredValue += weight * n_val;
                     // Normalization factor
-                    totalWeight += weight;
+                    K += weight;
                 }
             }
 
             // Normalize the result.
-            result.data[y * H.width + x] = filteredValue / totalWeight;
+            result.data[y * H.width + x] = filteredValue / K;
         }
     }
 
@@ -481,6 +482,8 @@ ImageFloat solvePoisson(const ImageFloat& initial_solution, const ImageFloat& di
     // Another solution for the alteranting updates.
     auto I_next = ImageFloat(I.width, I.height);
 
+    // Parallelization
+    #pragma omp parallel for
     // Iterative solver.
     for (auto iter = 0; iter < num_iters; iter++)
     {
@@ -489,14 +492,24 @@ ImageFloat solvePoisson(const ImageFloat& initial_solution, const ImageFloat& di
             std::cout << "[" << iter << "/" << num_iters << "] Solving Poisson equation..." << std::endl;
         }
 
-        // Compute values of I based following the update rule in the slides.
 
-        // Note: Parallelize the code using OpenMP directives for full points.
+        for (int y = 0; y < I.height; ++y) {
+            for (int x = 0; x < I.width; ++x) {
 
-        /*******
-         * TODO: YOUR CODE GOES HERE!!!
-         ******/
-        // Swaps the current and next solution so that the next iteration
+            // Boundary handling
+            if (x == 0 || y == 0 || x == I.width - 1 || y == I.height - 1) {
+                I_next.data[getImageOffset(I, x, y)] = I.data[getImageOffset(I, x, y)];
+                continue;
+            }
+
+            // Apply the update rule
+            float new_value = 0.25f * (I.data[getImageOffset(I, x + 1, y)] + I.data[getImageOffset(I, x - 1, y)] + I.data[getImageOffset(I, x, y + 1)] + I.data[getImageOffset(I, x, y - 1)] - divergence_G.data[getImageOffset(divergence_G, x, y)]);
+
+            I_next.data[getImageOffset(I, x, y)] = new_value;
+            }
+        }
+
+        // Swap the current and next solution so that the next iteration
         // uses the new solution as input and the previous solution as output.
         std::swap(I, I_next);
     }
@@ -504,6 +517,7 @@ ImageFloat solvePoisson(const ImageFloat& initial_solution, const ImageFloat& di
     // After the last "swap", I is the latest solution.
     return I;
 }
+
 
 #pragma endregion Poisson editing
 
